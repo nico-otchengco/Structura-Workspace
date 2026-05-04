@@ -12,7 +12,7 @@ const tiers = [
   {
     id: 'free',
     name: 'Free',
-    price: '$0',
+    price: '₱0',
     period: 'forever',
     desc: 'Perfect for small teams getting started',
     icon: <Zap size={18} />,
@@ -24,7 +24,7 @@ const tiers = [
   {
     id: 'pro',
     name: 'Pro',
-    price: '$12',
+    price: '₱299',
     period: 'per month',
     desc: 'For growing teams that need more power',
     icon: <Sparkles size={18} />,
@@ -37,7 +37,7 @@ const tiers = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: '$49',
+    price: '₱499',
     period: 'per month',
     desc: 'For large organizations with custom needs',
     icon: <Building2 size={18} />,
