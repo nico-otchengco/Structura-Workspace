@@ -128,8 +128,8 @@ A few things I focused on while building this:
 ### Setup
 
 ```bash
-git clone https://github.com/nico-otchengco/Multi-Tenant-Project-Management
-cd Multi-Tenant-Project-Management
+git clone https://github.com/nico-otchengco/Structura-Workspace
+cd Structura-Workspace
 npm install
 ```
 
