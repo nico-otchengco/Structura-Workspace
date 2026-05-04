@@ -9,7 +9,7 @@ type WorkspaceContextType = {
 
 const WorkspaceContext = createContext<WorkspaceContextType | null>(null);
 
-export function WorkspaceProvider({ user, children }: { user: any; children: React.ReactNode }) {
+export function WorkspaceProvider({ children }: { user: any; children: React.ReactNode }) {
   return (
     <WorkspaceContext.Provider
       value={{ organization: null, boards: [], loading: false, refresh: async () => {} }}
