@@ -288,7 +288,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           </div>
           <div className="lp-footer-links">
             <a href="https://github.com/nico-otchengco" target="_blank" rel="noopener noreferrer">GitHub</a>
-            <a href="#">Portfolio</a>
+            <a href="https://portfolio-gnotchengco.vercel.app" target="_blank" rel="noopener noreferrer">Portfolio</a>
             <a href="https://www.linkedin.com/in/gian-nico-otchengco-78a982383/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
           </div>
         </footer>
