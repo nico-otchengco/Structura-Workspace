@@ -8,7 +8,7 @@ So this ended up being a lightweight project management tool where multiple team
 
 ---
 
-## 🧠 Why I built this
+## Why I built this
 
 I wanted to go beyond CRUD apps and actually build something that touches:
 
@@ -21,7 +21,7 @@ Basically, something I can confidently talk about in interviews as a **“real S
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 **Frontend**
 
