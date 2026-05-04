@@ -9,11 +9,10 @@ interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
   onCreate: (taskData: any) => Promise<void>;
-  initialStatus: string;
   members: Member[];
 }
 
-export function CreateTaskDialog({ open, onClose, onCreate, initialStatus, members }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ open, onClose, onCreate, members }: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');

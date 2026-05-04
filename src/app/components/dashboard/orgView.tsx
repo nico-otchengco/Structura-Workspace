@@ -179,7 +179,7 @@ export function OrganizationView({ organization, onBack, onCreateOrg }: Organiza
                 <BoardsList boards={boards} loading={loading} onSelectBoard={setSelectedBoard} onDeleteBoard={handleDeleteBoard} isReadOnly={isReadOnly} />
               </>
             )}
-            {activeTab === 'calendar' && <CalendarView organizationId={organization.id} boards={boards} />}
+            {activeTab === 'calendar' && <CalendarView boards={boards} />}
             {activeTab === 'team' && <TeamMembers organizationId={organization.id} userRole={organization.userRole} />}
             {activeTab === 'activity' && <ActivityLog organizationId={organization.id} />}
           </main>

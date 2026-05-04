@@ -5,7 +5,7 @@ import type { Task } from '../types/type';
 import '@/styles/style.css';
 
 interface Board { id: string; name: string; }
-interface CalendarViewProps { organizationId: string; boards: Board[]; }
+interface CalendarViewProps { boards: Board[]; }
 interface TaskWithBoard extends Task { boardName: string; }
 
 const priorityConfig: Record<string, { bg: string; text: string; border: string; icon: React.ReactNode }> = {
@@ -14,7 +14,7 @@ const priorityConfig: Record<string, { bg: string; text: string; border: string;
   low: { bg: '#f0fdf4', text: '#22c55e', border: '#bbf7d0', icon: <ArrowRightIcon size={9} /> },
 };
 
-export function CalendarView({ organizationId, boards }: CalendarViewProps) {
+export function CalendarView({ boards }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [tasks, setTasks] = useState<TaskWithBoard[]>([]);
   const [loading, setLoading] = useState(true);
