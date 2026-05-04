@@ -150,7 +150,7 @@ npm run dev
 
 ---
 
-## ⚡ Backend (Edge Functions)
+## Backend (Edge Functions)
 
 ```bash
 supabase login
@@ -173,7 +173,7 @@ supabase functions deploy server --no-verify-jwt
 
 ---
 
-## 📡 API Overview
+## API Overview
 
 Some of the main endpoints:
 
@@ -187,7 +187,7 @@ Some of the main endpoints:
 | PUT    | `/tasks/:id`        | Update task     |
 ---
 
-## 📌 What I’d improve next
+## What I’d improve next
 
 If I continue this project:
 
@@ -199,7 +199,7 @@ If I continue this project:
 
 ---
 
-## 👨‍💻 About me
+## About me
 
 Built by **Gian Nico Otchengco** as part of my journey into backend/full-stack engineering.
 
@@ -208,6 +208,6 @@ Built by **Gian Nico Otchengco** as part of my journey into backend/full-stack e
 
 ---
 
-## 📄 License
+## License
 
 MIT — feel free to explore or build on top of it.
