@@ -9,10 +9,11 @@ interface CreateTaskDialogProps {
   open: boolean;
   onClose: () => void;
   onCreate: (taskData: any) => Promise<void>;
+  initialStatus?: 'todo' | 'in_progress' | 'done';
   members: Member[];
 }
 
-export function CreateTaskDialog({ open, onClose, onCreate, members }: CreateTaskDialogProps) {
+export function CreateTaskDialog({ open, onClose, onCreate, initialStatus, members }: CreateTaskDialogProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('medium');
@@ -31,6 +32,7 @@ export function CreateTaskDialog({ open, onClose, onCreate, members }: CreateTas
         description: description || null,
         priority,
         assigned_to: assignedTo === 'unassigned' ? null : assignedTo,
+        status: initialStatus ?? 'todo',
         due_date: dueDate || null,
       });
       setTitle(''); setDescription(''); setPriority('medium');
