@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../../context/authContext';
-import { Button } from '../ui/Btn';
-import { Input } from '../ui/Inpt';
-import { Label } from '../ui/Lbl';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Crd';
-import { LogIn } from 'lucide-react';
+import '@/styles/style.css';
 
 interface LoginPageProps {
   onSwitchToSignup: () => void;
@@ -21,78 +17,58 @@ export function LoginPage({ onSwitchToSignup }: LoginPageProps) {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     const result = await signIn(email, password);
-    
-    if (result.error) {
-      setError(result.error);
-      setLoading(false);
-    }
+    if (result.error) { setError(result.error); setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center">
-              <LogIn className="h-6 w-6 text-white" />
+    <>
+      <div className="auth-root">
+        <div className="auth-grid" />
+        <div className="auth-orb" />
+        <div className="auth-orb auth-orb-2" />
+        <div className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-box">
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="white">
+                <path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/>
+              </svg>
             </div>
+            <span className="auth-logo-name">Structura</span>
           </div>
-          <CardTitle className="text-center">Welcome Back</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to your account to continue
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                {error}
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+          <h1 className="auth-title">Welcome Back</h1>
+          <p className="auth-sub">Sign in to your workspace to continue</p>
+          <div className="auth-divider" />
+          <form onSubmit={handleSubmit}>
+            {error && <div className="auth-error">{error}</div>}
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="email">Email</label>
+              <input
+                id="email" type="email" className="auth-input"
+                placeholder="you@example.com" value={email}
+                onChange={e => setEmail(e.target.value)} required
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+            <div className="auth-field">
+              <label className="auth-label" htmlFor="password">Password</label>
+              <input
+                id="password" type="password" className="auth-input"
+                placeholder="••••••••" value={password}
+                onChange={e => setPassword(e.target.value)} required
               />
             </div>
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-
-            <div className="text-center text-sm">
-              <span className="text-gray-600">Don't have an account? </span>
-              <button
-                type="button"
-                onClick={onSwitchToSignup}
-                className="text-blue-600 hover:underline font-medium"
-              >
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In →'}
+            </button>
+            <div className="auth-switch">
+              Don't have an account?{' '}
+              <button type="button" className="auth-switch-btn" onClick={onSwitchToSignup}>
                 Sign up
               </button>
             </div>
           </form>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

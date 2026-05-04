@@ -1,91 +1,50 @@
-import React from 'react';
+import { useRef } from 'react';
 import { useDrop } from 'react-dnd';
-import { Card } from '../ui/Card';
-import { Button } from '../ui/Button';
 import { Plus } from 'lucide-react';
 import { TaskCard } from './taskCard';
-import type { Task } from '../types/type';
+import type { Task, Member } from '../types/type';
+import '@/styles/style.css';
 
 type TaskStatus = 'todo' | 'in_progress' | 'done';
+interface KanbanColumnProps { title: string; status: TaskStatus; tasks: Task[]; members: Member[]; onMoveTask: (taskId: string, newStatus: TaskStatus) => void; onUpdateTask: (taskId: string, updates: Partial<Task>) => void; onDeleteTask: (taskId: string) => void; onAddTask: () => void; isReadOnly: boolean; }
 
-interface KanbanColumnProps {
-  title: string;
-  status: TaskStatus;
-  tasks: Task[];
-  onMoveTask: (taskId: string, newStatus: TaskStatus) => void;
-  onUpdateTask: (taskId: string, updates: Partial<Task>) => void;
-  onDeleteTask: (taskId: string) => void;
-  onAddTask: () => void;
-  isReadOnly: boolean;
-}
+const colConfig = {
+  todo: { accent: '#4f46e5', bg: '#eef2ff', label: '#4f46e5', dot: '#818cf8' },
+  in_progress: { accent: '#f59e0b', bg: '#fffbeb', label: '#d97706', dot: '#fbbf24' },
+  done: { accent: '#22c55e', bg: '#f0fdf4', label: '#16a34a', dot: '#4ade80' },
+};
 
-export function KanbanColumn({
-  title,
-  status,
-  tasks,
-  onMoveTask,
-  onUpdateTask,
-  onDeleteTask,
-  onAddTask,
-  isReadOnly,
-}: KanbanColumnProps) {
+export function KanbanColumn({ title, status, tasks, members, onMoveTask, onUpdateTask, onDeleteTask, onAddTask, isReadOnly }: KanbanColumnProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const [{ isOver }, drop] = useDrop(() => ({
     accept: 'TASK',
-    drop: (item: { id: string; status: TaskStatus }) => {
-      if (item.status !== status) {
-        onMoveTask(item.id, status);
-      }
-    },
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-    }),
+    drop: (item: { id: string; status: TaskStatus }) => { if (item.status !== status) onMoveTask(item.id, status); },
+    collect: monitor => ({ isOver: monitor.isOver() }),
   }));
+  drop(ref);
 
-  const getColumnColor = () => {
-    switch (status) {
-      case 'todo':
-        return 'border-t-4 border-t-blue-500';
-      case 'in_progress':
-        return 'border-t-4 border-t-yellow-500';
-      case 'done':
-        return 'border-t-4 border-t-green-500';
-      default:
-        return 'border-t-4 border-t-gray-500';
-    }
-  };
+  const cfg = colConfig[status];
 
   return (
-    <div
-      ref={drop}
-      className={`flex flex-col h-full ${isOver ? 'ring-2 ring-blue-500 ring-opacity-50 rounded-lg' : ''}`}
-    >
-      <Card className={`flex-1 ${getColumnColor()}`}>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-500">{tasks.length} task{tasks.length !== 1 ? 's' : ''}</p>
-            </div>
-            {!isReadOnly && (
-              <Button variant="ghost" size="icon" onClick={onAddTask}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            )}
+    <>
+      <div ref={ref} className={`kc-col ${isOver ? 'over' : ''}`}>
+        <div className="kc-header">
+          <div className="kc-header-left">
+            <div className="kc-dot" style={{ background: cfg.dot }} />
+            <span className="kc-title">{title}</span>
+            <span className="kc-count" style={{ background: cfg.bg, color: cfg.label }}>{tasks.length}</span>
           </div>
-
-          <div className="space-y-3">
-            {tasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onUpdate={onUpdateTask}
-                onDelete={onDeleteTask}
-                isReadOnly={isReadOnly}
-              />
-            ))}
-          </div>
+          {!isReadOnly && (
+            <button className="kc-add" onClick={onAddTask}><Plus size={13} /></button>
+          )}
         </div>
-      </Card>
-    </div>
+        <div className="kc-body">
+          {tasks.length === 0 && <div className="kc-empty">Drop tasks here</div>}
+          {tasks.map(task => (
+            <TaskCard key={task.id} task={task} members={members} onUpdate={onUpdateTask} onDelete={onDeleteTask} isReadOnly={isReadOnly} />
+          ))}
+        </div>
+      </div>
+    </>
   );
 }

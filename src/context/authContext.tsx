@@ -55,15 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: {
+          data: { name },
+        },
       });
 
-      if (error) return { error: error.message };
-      if (data.user) return await signIn(email, password);
-      return { error: 'Failed to sign up' };
+      if (error || !data.user) {
+        return { error: error?.message || 'Signup failed' };
+      }
+
+      setUser(data.user);
+      return {};
     } catch (error) {
       return { error: 'Failed to sign up' };
-    } 
+    }
   };
 
   const signOut = async () => {
@@ -89,4 +94,14 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+}
+
+export async function getUserOrganization(userId: string) {
+  const { data } = await supabase
+    .from('organization_members')
+    .select('organization_id, role')
+    .eq('user_id', userId)
+    .single();
+
+  return data;
 }

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../../context/authContext';
 import { organizationsAPI } from '../../../lib/api';
-import { Button } from '../ui/Btn';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Crd';
-import { LogOut, Plus, Building2, Users, LayoutDashboard } from 'lucide-react';
+import { LogOut, Plus, Building2, Users, ChevronRight } from 'lucide-react';
 import { CreateOrganizationDialog } from './createOrganizationDialog';
 import { OrganizationView } from './orgView';
+import '@/styles/style.css';
 
 interface Organization {
   id: string;
@@ -22,9 +21,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
-  useEffect(() => {
-    loadOrganizations();
-  }, []);
+  useEffect(() => { loadOrganizations(); }, []);
 
   const loadOrganizations = async () => {
     try {
@@ -49,120 +46,111 @@ export function Dashboard() {
   };
 
   if (selectedOrg) {
-    return (
-      <OrganizationView
-        organization={selectedOrg}
-        onBack={() => setSelectedOrg(null)}
-      />
-    );
+    return <OrganizationView organization={selectedOrg} onBack={() => setSelectedOrg(null)} />;
   }
 
+  const tierColor = (tier: string) => {
+    switch (tier) {
+      case 'pro': return { bg: '#fef3c7', text: '#92400e', dot: '#f59e0b' };
+      case 'enterprise': return { bg: '#ede9fe', text: '#4c1d95', dot: '#7c3aed' };
+      default: return { bg: '#f0fdf4', text: '#14532d', dot: '#22c55e' };
+    }
+  };
+
+  const roleColor = (role: string) => {
+    switch (role) {
+      case 'owner': return { bg: '#fef9c3', text: '#713f12' };
+      case 'project_manager': return { bg: '#ede9fe', text: '#4c1d95' };
+      case 'member': return { bg: '#eff6ff', text: '#1e3a5f' };
+      default: return { bg: '#f3f4f6', text: '#374151' };
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center">
-                <LayoutDashboard className="h-6 w-6 text-white" />
+    <>
+      <div className="dash-root">
+        <header className="dash-header">
+          <div className="dash-header-inner">
+            <div className="dash-logo">
+              <div className="dash-logo-box">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="white"><path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/></svg>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Project Manager</h1>
-                <p className="text-sm text-gray-500">{user?.email}</p>
-              </div>
+              <span className="dash-logo-name">Structura</span>
             </div>
-            <Button variant="outline" onClick={signOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            <div className="dash-user">
+              <span className="dash-user-email">{user?.user_metadata?.name || user?.email}</span>
+              <button className="dash-signout" onClick={signOut}>
+                <LogOut size={13} /> Sign Out
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900">Your Organizations</h2>
-            <p className="text-gray-600 mt-1">
-              Manage your projects and collaborate with your team
-            </p>
+        <main className="dash-main">
+          <div className="dash-page-header">
+            <div>
+              <h1 className="dash-page-title">Your Organizations</h1>
+              <p className="dash-page-sub">Select a workspace to get started</p>
+            </div>
           </div>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Organization
-          </Button>
-        </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="h-4 bg-gray-200 rounded w-full"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : organizations.length === 0 ? (
-          <Card className="text-center py-12">
-            <CardContent>
-              <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No organizations yet
-              </h3>
-              <p className="text-gray-600 mb-6">
-                Get started by creating your first organization
-              </p>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Organization
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {organizations.map((org) => (
-              <Card
-                key={org.id}
-                className="hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => setSelectedOrg(org)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{org.name}</CardTitle>
-                      <CardDescription className="mt-1.5">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {org.subscription_tier}
-                        </span>
-                      </CardDescription>
+          {loading ? (
+            <div className="dash-grid">
+              {[1,2,3].map(i => (
+                <div className="dash-skeleton" key={i}>
+                  <div className="dash-skel-line" style={{ height: 44, width: 44, borderRadius: 12, marginBottom: 20 }} />
+                  <div className="dash-skel-line" style={{ height: 18, width: '60%', marginBottom: 12 }} />
+                  <div className="dash-skel-line" style={{ height: 12, width: '40%' }} />
+                </div>
+              ))}
+            </div>
+          ) : organizations.length === 0 ? (
+            <div className="dash-empty">
+              <div className="dash-empty-icon"><Building2 size={24} color="#9ca3af" /></div>
+              <h3 className="dash-empty-title">No organizations yet</h3>
+              <p className="dash-empty-sub">Create your first workspace to start managing projects</p>
+              <button className="dash-new-btn" style={{ margin: '0 auto' }} onClick={() => setShowCreateDialog(true)}>
+                <Plus size={15} /> Create Organization
+              </button>
+            </div>
+          ) : (
+            <div className="dash-grid">
+              {organizations.map(org => {
+                const tc = tierColor(org.subscription_tier.charAt(0).toUpperCase() + org.subscription_tier.slice(1));
+                const rc = roleColor(org.userRole);
+                return (
+                  <div className="dash-card" key={org.id} onClick={() => setSelectedOrg(org)}>
+                    <div className="dash-card-top">
+                      <div className="dash-card-icon"><Building2 size={20} color="#6b6b7b" /></div>
+                      <ChevronRight size={18} className="dash-card-arrow" />
                     </div>
-                    <Building2 className="h-8 w-8 text-gray-400" />
+                    <div className="dash-card-name">{org.name}</div>
+                    <div className="dash-card-badges">
+                      <span className="dash-badge" style={{ background: tc.bg, color: tc.text }}>
+                        <span className="dash-badge-dot" style={{ background: tc.dot }} />
+                        {org.subscription_tier}
+                      </span>
+                      <span className="dash-badge" style={{ background: rc.bg, color: rc.text }}>
+                        {org.userRole}
+                      </span>
+                    </div>
+                    <div className="dash-card-footer">
+                      <Users size={12} />
+                      Created {new Date(org.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                    </div>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Users className="h-4 w-4 mr-1" />
-                    <span className="capitalize">{org.userRole}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </main>
+                );
+              })}
+            </div>
+          )}
+        </main>
 
-      <CreateOrganizationDialog
-        open={showCreateDialog}
-        onClose={() => setShowCreateDialog(false)}
-        onCreate={handleCreateOrganization}
-      />
-    </div>
+        <CreateOrganizationDialog
+          open={showCreateDialog}
+          onClose={() => setShowCreateDialog(false)}
+          onCreate={handleCreateOrganization}
+        />
+      </div>
+    </>
   );
 }

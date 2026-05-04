@@ -3,10 +3,13 @@ import { AuthProvider, useAuth } from '../context/authContext';
 import { LoginPage } from './components/auth/loginPage';
 import { SignupPage } from './components/auth/signupPage';
 import { Dashboard } from './components/dashboard/dashboard';
+import { WorkspaceProvider } from '../context/workspaceContext';
+import { LandingPage } from './components/landingPage';
 
 function AppContent() {
   const { user, loading } = useAuth();
   const [showSignup, setShowSignup] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
   if (loading) {
     return (
@@ -19,14 +22,24 @@ function AppContent() {
     );
   }
 
-  if (!user) {
-    if (showSignup) {
-      return <SignupPage onSwitchToLogin={() => setShowSignup(false)} />;
-    }
-    return <LoginPage onSwitchToSignup={() => setShowSignup(true)} />;
+  if (user) {
+    return (
+      <WorkspaceProvider user={user}>
+        <Dashboard />
+      </WorkspaceProvider>
+    );
   }
 
-  return <Dashboard />;
+  if (!showAuth) {
+    return <LandingPage onGetStarted={() => setShowAuth(true)} />;
+  }
+
+  if (showSignup) {
+    return <SignupPage onSwitchToLogin={() => setShowSignup(false)} />;
+  }
+
+  return <LoginPage onSwitchToSignup={() => setShowSignup(true)} />;
+    
 }
 
 export default function App() {

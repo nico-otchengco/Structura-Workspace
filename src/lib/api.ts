@@ -37,6 +37,7 @@ async function apiRequest(endpoint: string, options: RequestInit = {}): Promise<
 
 // Organizations
 export const organizationsAPI = {
+  delete: (id: string) => apiRequest(`/organizations/${id}`, { method: 'DELETE' }),
   list: () => apiRequest('/organizations'),
   get: (id: string) => apiRequest(`/organizations/${id}`),
   create: (name: string, subscription_tier?: string) =>

@@ -12,6 +12,7 @@ export interface Task {
   created_at: string;
   updated_at: string;
   position: number;
+  due_date: string | null;
 }
 
 export interface Board {
@@ -33,4 +34,7 @@ export interface Member {
   user_id: string;
   role: 'owner' | 'project_manager' | 'admin' | 'member' | 'client';
   created_at: string;
+  name: string | null;
+  email: string | null;
+  user: { id: string; name: string; email: string } | null;
 }

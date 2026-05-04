@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Label } from '../ui/Label';
-import { X } from 'lucide-react';
-import * as Select from '@radix-ui/react-select';
-import { ChevronDown } from 'lucide-react';
+import { X, Check, Zap, Building2, Sparkles } from 'lucide-react';
 
 interface CreateOrganizationDialogProps {
   open: boolean;
@@ -13,21 +8,67 @@ interface CreateOrganizationDialogProps {
   onCreate: (name: string, tier: string) => Promise<void>;
 }
 
+const tiers = [
+  {
+    id: 'free',
+    name: 'Free',
+    price: '$0',
+    period: 'forever',
+    desc: 'Perfect for small teams getting started',
+    icon: <Zap size={18} />,
+    color: '#22c55e',
+    bg: '#f0fdf4',
+    border: '#bbf7d0',
+    features: ['Up to 3 boards', '5 team members', 'Basic analytics', 'Activity log'],
+  },
+  {
+    id: 'pro',
+    name: 'Pro',
+    price: '$12',
+    period: 'per month',
+    desc: 'For growing teams that need more power',
+    icon: <Sparkles size={18} />,
+    color: '#4f46e5',
+    bg: '#eef2ff',
+    border: '#c7d2fe',
+    features: ['Unlimited boards', '25 team members', 'Advanced analytics', 'AI Assistant', 'Priority support'],
+    popular: true,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    price: '$49',
+    period: 'per month',
+    desc: 'For large organizations with custom needs',
+    icon: <Building2 size={18} />,
+    color: '#7c3aed',
+    bg: '#fdf4ff',
+    border: '#e9d5ff',
+    features: ['Unlimited everything', 'Unlimited members', 'Custom integrations', 'Dedicated support', 'SLA guarantee'],
+  },
+];
+
 export function CreateOrganizationDialog({ open, onClose, onCreate }: CreateOrganizationDialogProps) {
   const [name, setName] = useState('');
   const [tier, setTier] = useState('free');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [step, setStep] = useState<'name' | 'tier'>('name');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleNext = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) return;
+    setStep('tier');
+  };
+
+  const handleSubmit = async () => {
     setError('');
     setLoading(true);
-
     try {
       await onCreate(name, tier);
       setName('');
       setTier('free');
+      setStep('name');
       onClose();
     } catch (err: any) {
       setError(err.message || 'Failed to create organization');
@@ -36,87 +77,133 @@ export function CreateOrganizationDialog({ open, onClose, onCreate }: CreateOrga
     }
   };
 
-  return (
-    <Dialog.Root open={open} onOpenChange={(open) => !open && onClose()}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-md z-50">
-          <div className="flex items-center justify-between mb-4">
-            <Dialog.Title className="text-xl font-semibold">
-              Create New Organization
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="text-gray-400 hover:text-gray-600">
-                <X className="h-5 w-5" />
-              </button>
-            </Dialog.Close>
-          </div>
+  const handleClose = () => {
+    setName('');
+    setTier('free');
+    setStep('name');
+    setError('');
+    onClose();
+  };
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
-                {error}
+  const selectedTier = tiers.find(t => t.id === tier)!;
+
+  return (
+    <>
+      <Dialog.Root open={open} onOpenChange={(o) => !o && handleClose()}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="cod-overlay" />
+          <Dialog.Content className={`cod-content step-${step}`}>
+
+            {/* Step indicator */}
+            <div className="cod-steps">
+              <div className="cod-step">
+                <div className="cod-step-num" style={{ background: '#0a0a0f', color: 'white' }}>
+                  {step === 'name' ? '1' : <Check size={11} />}
+                </div>
+                <span style={{ color: '#0a0a0f' }}>Name</span>
+              </div>
+              <div className="cod-step-line" />
+              <div className="cod-step">
+                <div className="cod-step-num" style={{ background: step === 'tier' ? '#0a0a0f' : '#f0efeb', color: step === 'tier' ? 'white' : '#9ca3af' }}>2</div>
+                <span style={{ color: step === 'tier' ? '#0a0a0f' : '#9ca3af' }}>Plan</span>
+              </div>
+            </div>
+
+            <div className="cod-header">
+              <div>
+                <Dialog.Title className="cod-title">
+                  {step === 'name' ? 'Create Organization' : 'Choose a Plan'}
+                </Dialog.Title>
+                <p className="cod-subtitle">
+                  {step === 'name' ? 'Give your workspace a name' : 'Select the right plan for your team'}
+                </p>
+              </div>
+              <button className="cod-close" onClick={handleClose}><X size={14} /></button>
+            </div>
+
+            {step === 'name' ? (
+              <form onSubmit={handleNext}>
+                {error && <div className="cod-error">{error}</div>}
+                <div>
+                  <label className="cod-label">Organization Name</label>
+                  <input
+                    className="cod-input"
+                    placeholder="Acme Inc."
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <div className="cod-actions">
+                  <button type="button" className="cod-btn-cancel" onClick={handleClose}>Cancel</button>
+                  <button type="submit" className="cod-btn-next" disabled={!name.trim()}>
+                    Next: Choose Plan →
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div>
+                {error && <div className="cod-error">{error}</div>}
+
+                {/* Summary */}
+                <div className="cod-summary">
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginBottom: 2 }}>Creating workspace</div>
+                    <div className="cod-summary-name">{name}</div>
+                  </div>
+                  <div className="cod-summary-tier" style={{ background: selectedTier.bg, color: selectedTier.color }}>
+                    {selectedTier.icon} {selectedTier.name}
+                  </div>
+                </div>
+
+                {/* Tier cards */}
+                <div className="cod-tiers">
+                  {tiers.map(t => (
+                    <div
+                      key={t.id}
+                      className={`cod-tier ${tier === t.id ? 'selected' : ''}`}
+                      style={tier === t.id ? { borderColor: t.color, background: t.bg } : {}}
+                      onClick={() => setTier(t.id)}
+                    >
+                      {t.popular && <div className="cod-popular">Most Popular</div>}
+                      <div className="cod-tier-header">
+                        <div className="cod-tier-icon" style={{ background: tier === t.id ? t.color : '#f5f4f0', color: tier === t.id ? 'white' : '#6b6b7b' }}>
+                          {t.icon}
+                        </div>
+                        <div className="cod-tier-check checked" style={{ background: tier === t.id ? t.color : 'transparent', borderColor: tier === t.id ? t.color : 'rgba(10,10,15,0.12)' }}>
+                          {tier === t.id && <Check size={11} color="white" />}
+                        </div>
+                      </div>
+                      <div className="cod-tier-name">{t.name}</div>
+                      <div className="cod-tier-price">{t.price}</div>
+                      <div className="cod-tier-period">{t.period}</div>
+                      <div className="cod-tier-desc">{t.desc}</div>
+                      <div className="cod-tier-features">
+                        {t.features.map((f, i) => (
+                          <div className="cod-tier-feature" key={i}>
+                            <div className="cod-tier-feature-dot" style={{ background: t.bg }}>
+                              <Check size={9} color={t.color} />
+                            </div>
+                            {f}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="cod-actions">
+                  <button className="cod-back" onClick={() => setStep('name')}>← Back</button>
+                  <button className="cod-create" onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Creating...' : `Create with ${selectedTier.name} Plan →`}
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="space-y-2">
-              <Label htmlFor="org-name">Organization Name</Label>
-              <Input
-                id="org-name"
-                placeholder="Acme Inc."
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tier">Subscription Tier</Label>
-              <Select.Root value={tier} onValueChange={setTier}>
-                <Select.Trigger className="flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <Select.Value />
-                  <Select.Icon>
-                    <ChevronDown className="h-4 w-4" />
-                  </Select.Icon>
-                </Select.Trigger>
-                <Select.Portal>
-                  <Select.Content className="overflow-hidden bg-white rounded-md shadow-lg border border-gray-200 z-50">
-                    <Select.Viewport className="p-1">
-                      <Select.Item
-                        value="free"
-                        className="relative flex items-center px-8 py-2 text-sm rounded cursor-pointer hover:bg-gray-100 focus:bg-gray-100 outline-none"
-                      >
-                        <Select.ItemText>Free</Select.ItemText>
-                      </Select.Item>
-                      <Select.Item
-                        value="pro"
-                        className="relative flex items-center px-8 py-2 text-sm rounded cursor-pointer hover:bg-gray-100 focus:bg-gray-100 outline-none"
-                      >
-                        <Select.ItemText>Pro</Select.ItemText>
-                      </Select.Item>
-                      <Select.Item
-                        value="enterprise"
-                        className="relative flex items-center px-8 py-2 text-sm rounded cursor-pointer hover:bg-gray-100 focus:bg-gray-100 outline-none"
-                      >
-                        <Select.ItemText>Enterprise</Select.ItemText>
-                      </Select.Item>
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
-              </Select.Root>
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Creating...' : 'Create'}
-              </Button>
-            </div>
-          </form>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+    </>
   );
 }

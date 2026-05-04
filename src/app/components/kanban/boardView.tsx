@@ -1,241 +1,131 @@
 import React, { useState, useEffect } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { boardsAPI, tasksAPI } from '../../../lib/api';
-import { Button } from '../ui/Button';
-import { ArrowLeft, Plus, BarChart3 } from 'lucide-react';
+import { boardsAPI, tasksAPI, organizationsAPI } from '../../../lib/api';
+import { ArrowLeft, Plus, BarChart3, X } from 'lucide-react';
 import { KanbanColumn } from './kanbanColumn';
 import { CreateTaskDialog } from './createTaskDialog';
 import { TaskAnalytics } from './taskAnalytics';
 import * as Dialog from '@radix-ui/react-dialog';
-import { X } from 'lucide-react';
+import type { Task, Board, Organization, Member } from '../types/type';
+import '@/styles/style.css';
 
-interface Board {
-  id: string;
-  name: string;
-  description: string | null;
-  organization_id: string;
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  userRole: string;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  description: string | null;
-  status: 'todo' | 'in_progress' | 'done';
-  priority: 'low' | 'medium' | 'high';
-  assigned_to: string | null;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  position: number;
-}
-
-interface BoardViewProps {
-  board: Board;
-  organization: Organization;
-  onBack: () => void;
-}
+interface BoardViewProps { board: Board; organization: Organization; onBack: () => void; }
 
 export function BoardView({ board, organization, onBack }: BoardViewProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<'todo' | 'in_progress' | 'done'>('todo');
 
-  useEffect(() => {
-    loadTasks();
-  }, [board.id]);
+  useEffect(() => { loadTasks(); loadMembers(); }, [board.id]);
 
   const loadTasks = async () => {
-    try {
-      const { tasks: tasksList } = await boardsAPI.getTasks(board.id);
-      setTasks(tasksList);
-    } catch (error) {
-      console.error('Failed to load tasks:', error);
-    } finally {
-      setLoading(false);
-    }
+    try { const { tasks: t } = await boardsAPI.getTasks(board.id); setTasks(t); }
+    catch (e) { console.error(e); } finally { setLoading(false); }
   };
-
+  const loadMembers = async () => {
+    try { const { members: m } = await organizationsAPI.getMembers(organization.id); setMembers(m); }
+    catch (e) { console.error(e); }
+  };
   const handleCreateTask = async (taskData: any) => {
-    try {
-      await tasksAPI.create({
-        board_id: board.id,
-        ...taskData,
-        status: selectedStatus,
-      });
-      await loadTasks();
-      setShowCreateTask(false);
-    } catch (error) {
-      console.error('Failed to create task:', error);
-      throw error;
-    }
+    try { await tasksAPI.create({ board_id: board.id, ...taskData, status: selectedStatus }); await loadTasks(); setShowCreateTask(false); }
+    catch (e) { console.error(e); throw e; }
   };
-
   const handleMoveTask = async (taskId: string, newStatus: 'todo' | 'in_progress' | 'done') => {
-    try {
-      await tasksAPI.update(taskId, { status: newStatus });
-      await loadTasks();
-    } catch (error) {
-      console.error('Failed to move task:', error);
-    }
+    try { await tasksAPI.update(taskId, { status: newStatus }); await loadTasks(); } catch (e) { console.error(e); }
   };
-
   const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
-    try {
-      await tasksAPI.update(taskId, updates);
-      await loadTasks();
-    } catch (error) {
-      console.error('Failed to update task:', error);
-    }
+    try { await tasksAPI.update(taskId, updates); await loadTasks(); } catch (e) { console.error(e); }
   };
-
   const handleDeleteTask = async (taskId: string) => {
-    try {
-      await tasksAPI.delete(taskId);
-      await loadTasks();
-    } catch (error) {
-      console.error('Failed to delete task:', error);
-    }
+    try { await tasksAPI.delete(taskId); await loadTasks(); } catch (e) { console.error(e); }
   };
 
   const isReadOnly = organization.userRole === 'client';
-
-  const todoTasks = tasks.filter((t) => t.status === 'todo');
-  const inProgressTasks = tasks.filter((t) => t.status === 'in_progress');
-  const doneTasks = tasks.filter((t) => t.status === 'done');
+  const todoTasks = tasks.filter(t => t.status === 'todo');
+  const inProgressTasks = tasks.filter(t => t.status === 'in_progress');
+  const doneTasks = tasks.filter(t => t.status === 'done');
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="icon" onClick={onBack}>
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
+    <>
+      <DndProvider backend={HTML5Backend}>
+        <div className="bv-root">
+          <header className="bv-header">
+            <div className="bv-header-inner">
+              <div className="bv-header-left">
+                <button className="bv-back" onClick={onBack}><ArrowLeft size={16} /></button>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{board.name}</h1>
-                  {board.description && (
-                    <p className="text-sm text-gray-600 mt-0.5">{board.description}</p>
-                  )}
+                  <div className="bv-board-name">{board.name}</div>
+                  {board.description && <div className="bv-board-desc">{board.description}</div>}
                 </div>
               </div>
-              <div className="flex items-center space-x-3">
-                <Button variant="outline" onClick={() => setShowAnalytics(true)}>
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Analytics
-                </Button>
+              <div className="bv-header-actions">
+                <button className="bv-analytics-btn" onClick={() => setShowAnalytics(true)}>
+                  <BarChart3 size={14} /> Analytics
+                </button>
                 {!isReadOnly && (
-                  <Button onClick={() => {
-                    setSelectedStatus('todo');
-                    setShowCreateTask(true);
-                  }}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Task
-                  </Button>
+                  <button className="bv-new-task-btn" onClick={() => { setSelectedStatus('todo'); setShowCreateTask(true); }}>
+                    <Plus size={14} /> New Task
+                  </button>
                 )}
               </div>
             </div>
-          </div>
-        </header>
+          </header>
 
-        {/* Kanban Board */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {loading ? (
-            <div className="flex space-x-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex-1">
-                  <div className="bg-white rounded-lg p-4 animate-pulse">
-                    <div className="h-6 bg-gray-200 rounded w-24 mb-4"></div>
-                    <div className="space-y-3">
-                      {[1, 2].map((j) => (
-                        <div key={j} className="h-24 bg-gray-100 rounded"></div>
-                      ))}
-                    </div>
-                  </div>
+          <main className="bv-main">
+            <div className="bv-stats">
+              {[
+                { num: tasks.length, label: 'Total Tasks', color: '#0a0a0f' },
+                { num: todoTasks.length, label: 'To Do', color: '#4f46e5' },
+                { num: inProgressTasks.length, label: 'In Progress', color: '#f59e0b' },
+                { num: doneTasks.length, label: 'Done', color: '#22c55e' },
+              ].map((s, i) => (
+                <div className="bv-stat" key={i}>
+                  <div className="bv-stat-num" style={{ color: s.color }}>{s.num}</div>
+                  <div className="bv-stat-label">{s.label}</div>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <KanbanColumn
-                title="To Do"
-                status="todo"
-                tasks={todoTasks}
-                onMoveTask={handleMoveTask}
-                onUpdateTask={handleUpdateTask}
-                onDeleteTask={handleDeleteTask}
-                onAddTask={() => {
-                  setSelectedStatus('todo');
-                  setShowCreateTask(true);
-                }}
-                isReadOnly={isReadOnly}
-              />
-              <KanbanColumn
-                title="In Progress"
-                status="in_progress"
-                tasks={inProgressTasks}
-                onMoveTask={handleMoveTask}
-                onUpdateTask={handleUpdateTask}
-                onDeleteTask={handleDeleteTask}
-                onAddTask={() => {
-                  setSelectedStatus('in_progress');
-                  setShowCreateTask(true);
-                }}
-                isReadOnly={isReadOnly}
-              />
-              <KanbanColumn
-                title="Done"
-                status="done"
-                tasks={doneTasks}
-                onMoveTask={handleMoveTask}
-                onUpdateTask={handleUpdateTask}
-                onDeleteTask={handleDeleteTask}
-                onAddTask={() => {
-                  setSelectedStatus('done');
-                  setShowCreateTask(true);
-                }}
-                isReadOnly={isReadOnly}
-              />
-            </div>
-          )}
-        </main>
 
-        <CreateTaskDialog
-          open={showCreateTask}
-          onClose={() => setShowCreateTask(false)}
-          onCreate={handleCreateTask}
-          initialStatus={selectedStatus}
-        />
-
-        {/* Analytics Dialog */}
-        <Dialog.Root open={showAnalytics} onOpenChange={setShowAnalytics}>
-          <Dialog.Portal>
-            <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-            <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto z-50">
-              <div className="flex items-center justify-between mb-4">
-                <Dialog.Title className="text-xl font-semibold">Task Analytics</Dialog.Title>
-                <Dialog.Close asChild>
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <X className="h-5 w-5" />
-                  </button>
-                </Dialog.Close>
+            {loading ? (
+              <div className="bv-columns">
+                {[1,2,3].map(i => (
+                  <div className="bv-skeleton" key={i}>
+                    <div className="bv-skel" style={{ height: 20, width: 80, marginBottom: 16 }} />
+                    {[1,2].map(j => <div className="bv-skel" key={j} style={{ height: 80, marginBottom: 10 }} />)}
+                  </div>
+                ))}
               </div>
-              <TaskAnalytics boardId={board.id} />
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog.Root>
-      </div>
-    </DndProvider>
+            ) : (
+              <div className="bv-columns">
+                <KanbanColumn title="To Do" status="todo" tasks={todoTasks} members={members} onMoveTask={handleMoveTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onAddTask={() => { setSelectedStatus('todo'); setShowCreateTask(true); }} isReadOnly={isReadOnly} />
+                <KanbanColumn title="In Progress" status="in_progress" tasks={inProgressTasks} members={members} onMoveTask={handleMoveTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onAddTask={() => { setSelectedStatus('in_progress'); setShowCreateTask(true); }} isReadOnly={isReadOnly} />
+                <KanbanColumn title="Done" status="done" tasks={doneTasks} members={members} onMoveTask={handleMoveTask} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} onAddTask={() => { setSelectedStatus('done'); setShowCreateTask(true); }} isReadOnly={isReadOnly} />
+              </div>
+            )}
+          </main>
+
+          <CreateTaskDialog open={showCreateTask} onClose={() => setShowCreateTask(false)} onCreate={handleCreateTask} initialStatus={selectedStatus} members={members} />
+
+          <Dialog.Root open={showAnalytics} onOpenChange={setShowAnalytics}>
+            <Dialog.Portal>
+              <Dialog.Overlay className="bv-analytics-overlay" />
+              <Dialog.Content className="bv-analytics-modal">
+                <div className="bv-modal-header">
+                  <Dialog.Title className="bv-modal-title">Task Analytics</Dialog.Title>
+                  <Dialog.Close asChild>
+                    <button className="bv-modal-close"><X size={14} /></button>
+                  </Dialog.Close>
+                </div>
+                <TaskAnalytics boardId={board.id} />
+              </Dialog.Content>
+            </Dialog.Portal>
+          </Dialog.Root>
+        </div>
+      </DndProvider>
+    </>
   );
 }

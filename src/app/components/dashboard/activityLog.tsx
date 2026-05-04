@@ -1,159 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import { organizationsAPI } from '../../../lib/api';
-import { Card, CardContent } from '../ui/Card';
-import { Activity, Plus, Edit, Trash, UserPlus, UserMinus } from 'lucide-react';
+import { Activity, Plus, Edit2, Trash2, UserPlus, UserMinus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import '@/styles/style.css';
 
-interface ActivityItem {
-  id: string;
-  action: string;
-  resource_type: string;
-  resource_id: string;
-  metadata: Record<string, any>;
-  created_at: string;
-  user: {
-    name: string;
-    email: string;
-  };
-}
+interface ActivityItem { id: string; action: string; resource_type: string; resource_id: string; metadata: Record<string, any>; created_at: string; user: { name: string; email: string; }; }
+interface ActivityLogProps { organizationId: string; }
 
-interface ActivityLogProps {
-  organizationId: string;
-}
+const actionConfig: Record<string, { icon: React.ReactNode; bg: string; color: string }> = {
+  created: { icon: <Plus size={13} />, bg: '#f0fdf4', color: '#16a34a' },
+  updated: { icon: <Edit2 size={13} />, bg: '#eff6ff', color: '#2563eb' },
+  deleted: { icon: <Trash2 size={13} />, bg: '#fef2f2', color: '#dc2626' },
+  added_member: { icon: <UserPlus size={13} />, bg: '#fdf4ff', color: '#9333ea' },
+  removed_member: { icon: <UserMinus size={13} />, bg: '#fff7ed', color: '#ea580c' },
+};
 
 export function ActivityLog({ organizationId }: ActivityLogProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadActivities();
-  }, [organizationId]);
+  useEffect(() => { loadActivities(); }, [organizationId]);
 
   const loadActivities = async () => {
-    try {
-      const { activities: activityList } = await organizationsAPI.getActivities(organizationId, 50);
-      setActivities(activityList);
-    } catch (error) {
-      console.error('Failed to load activities:', error);
-    } finally {
-      setLoading(false);
-    }
+    try { const { activities: list } = await organizationsAPI.getActivities(organizationId, 50); setActivities(list); }
+    catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
-  const getActivityIcon = (action: string) => {
-    switch (action) {
-      case 'created':
-        return <Plus className="h-5 w-5 text-green-600" />;
-      case 'updated':
-        return <Edit className="h-5 w-5 text-blue-600" />;
-      case 'deleted':
-        return <Trash className="h-5 w-5 text-red-600" />;
-      case 'added_member':
-        return <UserPlus className="h-5 w-5 text-purple-600" />;
-      case 'removed_member':
-        return <UserMinus className="h-5 w-5 text-orange-600" />;
-      default:
-        return <Activity className="h-5 w-5 text-gray-600" />;
+  const getDescription = (a: ActivityItem) => {
+    const name = a.user?.name || 'Someone';
+    const { action, resource_type: rt, metadata: m } = a;
+    if (action === 'created') {
+      if (rt === 'organization') return `${name} created this organization`;
+      if (rt === 'board') return `${name} created board "${m.name}"`;
+      if (rt === 'task') return `${name} created task "${m.title}"`;
     }
-  };
-
-  const getActivityDescription = (activity: ActivityItem) => {
-    const userName = activity.user?.name || 'Someone';
-    const { action, resource_type, metadata } = activity;
-
-    switch (action) {
-      case 'created':
-        if (resource_type === 'organization') {
-          return `${userName} created the organization`;
-        } else if (resource_type === 'board') {
-          return `${userName} created board "${metadata.name}"`;
-        } else if (resource_type === 'task') {
-          return `${userName} created task "${metadata.title}"`;
-        }
-        break;
-      case 'updated':
-        if (resource_type === 'task') {
-          return `${userName} updated task "${metadata.title}"`;
-        }
-        break;
-      case 'deleted':
-        if (resource_type === 'board') {
-          return `${userName} deleted board "${metadata.name}"`;
-        } else if (resource_type === 'task') {
-          return `${userName} deleted task "${metadata.title}"`;
-        }
-        break;
-      case 'added_member':
-        return `${userName} invited ${metadata.invited_user} as ${metadata.role}`;
-      case 'removed_member':
-        return `${userName} removed a team member`;
+    if (action === 'updated' && rt === 'task') return `${name} updated task "${m.title}"`;
+    if (action === 'deleted') {
+      if (rt === 'board') return `${name} deleted board "${m.name}"`;
+      if (rt === 'task') return `${name} deleted task "${m.title}"`;
     }
-
-    return `${userName} ${action} ${resource_type}`;
+    if (action === 'added_member') return `${name} invited ${m.invited_user} as ${m.role}`;
+    if (action === 'removed_member') return `${name} removed a team member`;
+    return `${name} ${action} ${rt}`;
   };
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-6">
-              <div className="flex items-start space-x-4">
-                <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/4"></div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
-
-  if (activities.length === 0) {
-    return (
-      <Card className="text-center py-12">
-        <CardContent>
-          <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No activity yet</h3>
-          <p className="text-gray-600">Activity will appear here as your team works</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Activity Log</h2>
-        <p className="text-gray-600 mt-1">Recent activity in your organization</p>
-      </div>
+    <>
+      <div className="al-root">
+        <div className="al-header">
+          <h2 className="al-title">Activity Log</h2>
+          <p className="al-sub">Recent activity across your organization</p>
+        </div>
 
-      <div className="space-y-3">
-        {activities.map((activity) => (
-          <Card key={activity.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center">
-                    {getActivityIcon(activity.action)}
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
-                    {getActivityDescription(activity)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {formatDistanceToNow(new Date(activity.created_at), { addSuffix: true })}
-                  </p>
+        {loading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            {[1,2,3,4,5].map(i => (
+              <div key={i} style={{ display: 'flex', gap: 14, padding: '16px 0', borderBottom: '1px solid rgba(10,10,15,0.06)' }}>
+                <div className="al-skel" style={{ width: 34, height: 34, borderRadius: 10, flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="al-skel" style={{ height: 13, width: '65%', marginBottom: 8 }} />
+                  <div className="al-skel" style={{ height: 10, width: '25%' }} />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+            ))}
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="al-empty">
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: '#f5f4f0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Activity size={20} color="#9ca3af" />
+            </div>
+            <div style={{ fontFamily: 'Syne, sans-serif', fontWeight: 700, fontSize: '1rem', color: '#0a0a0f', marginBottom: 6 }}>No activity yet</div>
+            <div style={{ fontSize: '0.875rem', color: '#6b6b7b' }}>Activity will appear here as your team works</div>
+          </div>
+        ) : (
+          <div className="al-list">
+            {activities.map(a => {
+              const cfg = actionConfig[a.action] || { icon: <Activity size={13} />, bg: '#f3f4f6', color: '#6b7280' };
+              return (
+                <div className="al-item" key={a.id}>
+                  <div className="al-icon" style={{ background: cfg.bg, color: cfg.color }}>{cfg.icon}</div>
+                  <div className="al-body">
+                    <div className="al-desc">{getDescription(a)}</div>
+                    <div className="al-time">{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
