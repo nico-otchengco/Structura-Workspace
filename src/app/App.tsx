@@ -35,10 +35,10 @@ function AppContent() {
   }
 
   if (showSignup) {
-    return <SignupPage onSwitchToLogin={() => setShowSignup(false)} />;
+    return <SignupPage onSwitchToLogin={() => setShowSignup(false)} onGoHome={() => setShowAuth(false)} />;
   }
 
-  return <LoginPage onSwitchToSignup={() => setShowSignup(true)} />;
+  return <LoginPage onSwitchToSignup={() => setShowSignup(true)} onGoHome={() => setShowAuth(false)}/>;
     
 }
 
