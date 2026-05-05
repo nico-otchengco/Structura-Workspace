@@ -4,9 +4,10 @@ import '@/styles/style.css';
 
 interface SignupPageProps {
   onSwitchToLogin: () => void;
+  onGoHome: () => void;
 }
 
-export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
+export function SignupPage({ onSwitchToLogin, onGoHome }: SignupPageProps) {
   const { signUp } = useAuth();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -38,7 +39,7 @@ export function SignupPage({ onSwitchToLogin }: SignupPageProps) {
                 <path d="M2 2h5v5H2zm7 0h5v5H9zM2 9h5v5H2zm7 0h5v5H9z"/>
               </svg>
             </div>
-            <span className="auth-logo-name">Structura</span>
+            <span className="auth-logo-name" onClick={onGoHome} style={{ cursor: 'pointer' }}>Structura</span>
           </div>
           <h1 className="auth-title">Create Account</h1>
           <p className="auth-sub">Start managing your projects today</p>
